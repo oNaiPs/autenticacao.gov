@@ -24,6 +24,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v1
 
+    - name: test
+      run: ls -l /usr/local/opt/
+
     - name: Install deps
       run: |
         brew install make qt5 pcsc-lite xerces-c openjpeg xml-security-c libzip libxmlsec1
