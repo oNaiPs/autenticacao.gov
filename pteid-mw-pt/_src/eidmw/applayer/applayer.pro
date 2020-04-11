@@ -48,7 +48,7 @@ LIBS += -L../lib \
 LIBS += ../lib/libpteid-poppler.a
 !macx: LIBS += -Wl,--exclude-libs,ALL 
 
-macx: LIBS += -L/usr/local/opt/openssl@1.0/lib/ \
+macx: LIBS += -L/usr/local/opt/openssl/lib/ \
 	    -L$$system(brew --prefix xerces-c)/lib/ \
 	    -L$$system(brew --prefix libzip)/lib/ \
 		-L$$system(brew --prefix libpng)/lib/ \
@@ -58,7 +58,7 @@ macx: LIBS += -Wl,-framework -Wl,CoreFoundation
 macx: LIBS += -Wl,-framework -Wl,SystemConfiguration
 macx: LIBS += -Wl,-framework -Wl,CoreServices
 macx: LIBS += -liconv
-macx: INCLUDEPATH +=/usr/local/opt/openssl@1.0/include \
+macx: INCLUDEPATH +=/usr/local/opt/openssl/include \
 	$$system(brew --prefix libzip)/include \
 	$$system(brew --prefix)/include/openjpeg-2.3/ \
 	$$system(brew --prefix xml-security-c)/include/ \

@@ -20,7 +20,7 @@ QT -= gui
 DESTDIR = ./../../lib
 DEPENDPATH += .
 
-macx: LIBS +=	-L$$system(brew --prefix openssl)/lib/ \
+macx: LIBS +=	-L/usr/local/opt/openssl/lib/ \
                 -lz \
                 -lssl \
 		-lcrypto
@@ -36,7 +36,7 @@ LIBS += -L./../../lib \
         -lcrypto
         
 INCLUDEPATH += . ../../eidlib/ ../../common ../../applayer ../../cardlayer
-macx:INCLUDEPATH += $$system(brew --prefix openssl)/include/
+macx:INCLUDEPATH += /usr/local/opt/openssl/include/
 
 unix: DEFINES += __UNIX__ WITH_OPENSSL
 
