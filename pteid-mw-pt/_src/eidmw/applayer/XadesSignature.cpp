@@ -71,7 +71,9 @@
 #include <xsec/enc/XSECCryptoUtils.hpp>
 #include <xsec/enc/XSECCryptoException.hpp>
 #include <xsec/utils/XSECBinTXFMInputStream.hpp>
-//#include <xsec/utils/XSECDOMUtils.hpp>
+#if XSEC_VERSION_MAJOR == 1
+#include <xsec/utils/XSECDOMUtils.hpp>
+#endif
 #include <xsec/transformers/TXFMBase.hpp>
 #include <xsec/transformers/TXFMChain.hpp>
 
@@ -249,8 +251,10 @@ namespace eIDMW
 
 #define SIGNED_PROPS_ID "S0-SignedProperties"
 
-safeBuffer &makeQName(safeBuffer & qname, const XMLCh *prefix, const char * localName) {
+#if XSEC_VERSION_MAJOR >= 2
+#define MAKE_UNICODE_STRING(str) XMLString::transcode(str)
 
+safeBuffer &makeQName(safeBuffer & qname, const XMLCh *prefix, const char * localName) {
         if (prefix == NULL || prefix[0] == 0) {
                 qname.sbTranscodeIn(localName);
         }
@@ -263,13 +267,7 @@ safeBuffer &makeQName(safeBuffer & qname, const XMLCh *prefix, const char * loca
         return qname;
 }
 
-
-//TODO replace
-#define MAKE_UNICODE_STRING(str) XMLString::transcode(str) //XMLT(str).getUnicodeStr()
-
-
 void makeHexByte(XMLCh * h, unsigned char b) {
-
         unsigned char toConvert =  (b & 0xf0);
         toConvert = (toConvert >> 4);
 
@@ -288,8 +286,6 @@ void makeHexByte(XMLCh * h, unsigned char b) {
 }
 
 XMLCh * generateId(unsigned int bytes) {
-
-
         unsigned char b[128];
         XMLCh id[258];
         unsigned int toGen = (bytes > 128 ? 16 : bytes);
@@ -299,27 +295,22 @@ XMLCh * generateId(unsigned int bytes) {
         memset(b, 0, 128);
         memset(id, 0, sizeof(id));
         if (XSECPlatformUtils::g_cryptoProvider->getRandom(b, toGen) != toGen) {
-
                 throw XSECException(XSECException::CryptoProviderError,
                         "generateId - could not obtain enough random");
-
         }
 
         id[0] = chLatin_I;
 
         unsigned int i;
         for (i = 0; i < toGen; ++i) {
-
                 makeHexByte(&id[1+(i*2)], b[i]);
-
         }
 
         id[1+(i*2)] = chNull;
 
         return XMLString::replicate(id);
-
 }
-
+#endif
 
 std::basic_string<XMLCh> generateNodeID()
 {
