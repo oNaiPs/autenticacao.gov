@@ -71,7 +71,7 @@
 #include <xsec/enc/XSECCryptoUtils.hpp>
 #include <xsec/enc/XSECCryptoException.hpp>
 #include <xsec/utils/XSECBinTXFMInputStream.hpp>
-#include <xsec/utils/XSECDOMUtils.hpp>
+//#include <xsec/utils/XSECDOMUtils.hpp>
 #include <xsec/transformers/TXFMBase.hpp>
 #include <xsec/transformers/TXFMChain.hpp>
 
@@ -248,6 +248,77 @@ namespace eIDMW
 #define CREATE_DSIG_NODE doc->createElementNS(XMLString::transcode(DSIG_NAMESPACE), str.rawXMLChBuffer());
 
 #define SIGNED_PROPS_ID "S0-SignedProperties"
+
+safeBuffer &makeQName(safeBuffer & qname, const XMLCh *prefix, const char * localName) {
+
+        if (prefix == NULL || prefix[0] == 0) {
+                qname.sbTranscodeIn(localName);
+        }
+        else {
+                qname.sbXMLChIn(prefix);
+                qname.sbXMLChAppendCh(XERCES_CPP_NAMESPACE_QUALIFIER chColon);
+                qname.sbXMLChCat(localName);    // Will transcode
+        }
+
+        return qname;
+}
+
+
+//TODO replace
+#define MAKE_UNICODE_STRING(str) XMLString::transcode(str) //XMLT(str).getUnicodeStr()
+
+
+void makeHexByte(XMLCh * h, unsigned char b) {
+
+        unsigned char toConvert =  (b & 0xf0);
+        toConvert = (toConvert >> 4);
+
+        if (toConvert < 10)
+                h[0] = chDigit_0 + toConvert;
+        else
+                h[0] = chLatin_a + toConvert - 10;
+
+        toConvert =  (b & 0xf);
+
+        if (toConvert < 10)
+                h[1] = chDigit_0 + toConvert;
+        else
+                h[1] = chLatin_a + toConvert - 10;
+
+}
+
+XMLCh * generateId(unsigned int bytes) {
+
+
+        unsigned char b[128];
+        XMLCh id[258];
+        unsigned int toGen = (bytes > 128 ? 16 : bytes);
+
+        // Get the appropriate amount of random data
+        // Need to zeroise to ensure valgrind is happy
+        memset(b, 0, 128);
+        memset(id, 0, sizeof(id));
+        if (XSECPlatformUtils::g_cryptoProvider->getRandom(b, toGen) != toGen) {
+
+                throw XSECException(XSECException::CryptoProviderError,
+                        "generateId - could not obtain enough random");
+
+        }
+
+        id[0] = chLatin_I;
+
+        unsigned int i;
+        for (i = 0; i < toGen; ++i) {
+
+                makeHexByte(&id[1+(i*2)], b[i]);
+
+        }
+
+        id[1+(i*2)] = chNull;
+
+        return XMLString::replicate(id);
+
+}
 
 
 std::basic_string<XMLCh> generateNodeID()
@@ -550,7 +621,7 @@ int XadesSignature::HashSignedInfoNode(XERCES_NS DOMDocument *doc, XMLByte *hash
 
     string c14n;
     unsigned char buffer[1024];
-    xsecsize_t bytes = 0;
+    XMLSize_t bytes = 0;
     while((bytes = canonicalizer.outputBuffer(buffer, 1024)) > 0)
     {
         c14n.append( (char*)&buffer[0], size_t(bytes));
@@ -570,7 +641,7 @@ int XadesSignature::HashSignedPropertiesNode(XERCES_NS DOMDocument *doc, XMLByte
 {
 	CByteArray *partial_xml_file = WriteToByteArray(doc);
 
-	auto_ptr<XercesDOMParser> parser(new XercesDOMParser());
+    auto_ptr<XercesDOMParser> parser(new XercesDOMParser());
     parser->setDoNamespaces(true);
     parser->setValidationScheme(XercesDOMParser::Val_Always);
     parser->setDoSchema(true);
@@ -605,7 +676,7 @@ int XadesSignature::HashSignedPropertiesNode(XERCES_NS DOMDocument *doc, XMLByte
 
     string c14n;
     unsigned char buffer[1024];
-    xsecsize_t bytes = 0;
+    XMLSize_t bytes = 0;
     while((bytes = canonicalizer.outputBuffer(buffer, 1024)) > 0)
     {
         c14n.append( (char*)&buffer[0], size_t(bytes));
@@ -870,7 +941,7 @@ std::string canonicalNode(DOMNode *node, XERCES_NS DOMDocument *doc)
 
     string c14n;
     unsigned char buffer[1024];
-    xsecsize_t bytes = 0;
+    XMLSize_t bytes = 0;
     while((bytes = canonicalizer.outputBuffer(buffer, 1024)) > 0)
     {
         c14n.append((char*)&buffer[0], size_t(bytes));
@@ -1154,7 +1225,8 @@ CByteArray &XadesSignature::Sign(const char ** paths, unsigned int n_paths)
 		//sig->setDSIGNSPrefix(MAKE_UNICODE_STRING("ds"));
 
 		// Use it to create a blank signature DOM structure from the doc
-		sigNode = sig->createBlankSignature(doc, CANON_C14NE_NOC, SIGNATURE_RSA, HASH_SHA256);
+//		sigNode = sig->createBlankSignature(doc, CANON_C14NE_NOC, SIGNATURE_RSA, HASH_SHA256);
+        sigNode = sig->createBlankSignature(doc, DSIGConstants::s_unicodeStrURIC14N_NOC, DSIGConstants::s_unicodeStrURIHMAC_SHA256);
 
 		//Add Id attribute to signature
 		//signature_id = (XMLCh*)generateNodeID().c_str();
@@ -1176,7 +1248,9 @@ CByteArray &XadesSignature::Sign(const char ** paths, unsigned int n_paths)
 		{
 			const char * path = unique_paths[i]->c_str();
 			//Create a reference to the external file
-			DSIGReference * ref = sig->createReference(createURI(path), HASH_SHA256);
+//			DSIGReference * ref = sig->createReference(createURI(path), HASH_SHA256);
+            DSIGReference * ref = sig->createReference(createURI(path), DSIGConstants::s_unicodeStrURIHMAC_SHA256);
+
 			MWLOG(LEV_DEBUG, MOD_APL, "SignXades(): Hashing file %s", path);
                 sha1_hash = HashFile(paths[i]);
 
@@ -1201,7 +1275,9 @@ CByteArray &XadesSignature::Sign(const char ** paths, unsigned int n_paths)
 
 		HashSignedPropertiesNode(sig->getParentDocument(), sha1_hash_signed_props);
 
-		DSIGReference * ref_signed_props = sig->createReference(createSignedPropertiesURI().c_str(), HASH_SHA256);
+//		DSIGReference * ref_signed_props = sig->createReference(createSignedPropertiesURI().c_str(), HASH_SHA256);
+        DSIGReference * ref_signed_props = sig->createReference(createSignedPropertiesURI().c_str(), DSIGConstants::s_unicodeStrURIHMAC_SHA256);
+
 		ref_signed_props->setType(XMLString::transcode("http://uri.etsi.org/01903#SignedProperties"));
 
 		setReferenceHash(sha1_hash_signed_props, SHA256_LEN, references_count, doc);
