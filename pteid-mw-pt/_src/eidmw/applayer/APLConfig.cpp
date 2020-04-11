@@ -74,8 +74,8 @@
 #ifdef __APPLE__
 	#include <CoreFoundation/CFDictionary.h>
 	#include <SystemConfiguration/SCDynamicStoreCopySpecific.h>
-	//#include <CFNetwork/CFHTTPStream.h>
-	#include <CFHTTPStream.h>
+	#include <CFNetwork/CFHTTPStream.h>
+	// #include <CFHTTPStream.h>
 #endif
 
 namespace eIDMW

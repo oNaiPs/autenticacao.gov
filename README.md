@@ -50,7 +50,7 @@ A documentação da API disponibilizada pelo SDK está disponível nos seguintes
 3. Compilar o projecto na directoria eidmw
 
    ```bash
-   cd eidmw
+   cd pteid-mw-pt/_src/eidmw
    qmake pteid-mw.pro
    make
    ```

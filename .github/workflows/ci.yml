@@ -2,19 +2,51 @@ name: CI
 on: [push]
 jobs:
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
+  build_linux:
+    name: Build Linux
+    runs-on: ubuntu-18.04
     steps:
 
     - name: Checkout code
       uses: actions/checkout@v1
 
     - name: Install deps
-      run: apt update && apt install qmake
-
-    - name: QMake
-      run: qmake
+      run: sudo apt install libpcsclite-dev libpoppler-qt5-dev libzip-dev libopenjp2-7-dev libpng-dev openjdk-8-jdk qtbase5-dev qt5-qmake qtbase5-private-dev qt5-default qtdeclarative5-dev qtquickcontrols2-5-dev qml-module-qtquick-controls2 libssl1.0-dev libxerces-c-dev libxml-security-c-dev swig libcurl4-nss-dev libnsspem
 
     - name: Make
-      run: make -j16
+      run: cd pteid-mw-pt/_src/eidmw && qmake pteid-mw.pro && make -j$(nproc)
+
+  build_mac:
+    name: Build MacOS
+    runs-on: macos-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v1
+
+    - name: Install deps
+      run: |
+        brew install make qt5 pcsc-lite xerces-c openjpeg xml-security-c libzip libxmlsec1
+        qtbindir=$(brew --prefix qt5)/bin
+        makedir=$(brew --prefix make)/libexec/gnubin
+        echo "::add-path::$qtbindir"
+        echo "::add-path::$makedir"
+
+    - name: Make
+      run: cd pteid-mw-pt/_src/eidmw && qmake pteid-mw.pro && make -j$(nproc)
+      env:
+        CXX: clang++
+
+  build_windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v1
+
+    - name: Install deps
+      run: choco install qt-sdk-windows-x86-msvc2013_opengl curl xerces-c openjpeg xml-security-c libzip libxmlsec1
+
+    - name: Make
+      run: cd pteid-mw-pt/_src/eidmw && qmake pteid-mw.pro && make -j8

@@ -87,7 +87,7 @@ enum PTEID_CertifType
 
 enum PTEID_HashAlgo {
 	PTEID_ALGO_MD5,      /**< 16-byte hash */
-	PTEID_ALGO_SHA1,     /**< 20-byte hash */
+    PTEID_ALGO_SHA1     /**< 20-byte hash */
 };
 
 enum PTEID_FileType

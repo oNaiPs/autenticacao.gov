@@ -32,6 +32,7 @@ INSTALL_DIR_INCLUDE = $${PREFIX_DIR}/include
 isEmpty(JDK_INCLUDE_DIR){
   unix:!macx: JDK_INCLUDE_DIR += /usr/local/j2sdk1.4.2_17/include
   unix:!macx: JDK_INCLUDE_DIR += /usr/local/j2sdk1.4.2_17/include/linux
+  macx: JDK_INCLUDE_DIR += $$system(xcrun --sdk macosx --show-sdk-path)/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers/
 }
 
 CONFIG += c++11
